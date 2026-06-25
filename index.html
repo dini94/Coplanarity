@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSSC Dye Descriptor Toolkit</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fb;--surface:#ffffff;--surface2:#f1f3f7;--border:#e2e5ec;
+  --text:#1a1d23;--text2:#5a6070;--text3:#9099aa;
+  --accent:#2563eb;--accent-light:#eff4ff;--accent-border:#bfcfff;
+  --green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --red:#dc2626;--red-light:#fef2f2;
+  --purple:#7c3aed;--purple-light:#f5f3ff;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3348;
+    --text:#e8eaf2;--text2:#8b92a8;--text3:#555d72;
+    --accent:#3b82f6;--accent-light:#1e2a4a;--accent-border:#2d4a9e;
+    --green:#22c55e;--green-light:#0a1f12;--green-border:#166534;
+    --amber:#fbbf24;--amber-light:#1c1500;
+    --red:#f87171;--red-light:#2a1414;
+    --purple:#a78bfa;--purple-light:#1e1a3a;
+  }
+}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 22px 60px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--text2);font-size:13.5px;margin-top:4px;max-width:720px}
+.crumbs{font-size:12px;color:var(--text3);margin-bottom:10px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border)}
+.badge.g{background:var(--green-light);color:var(--green);border-color:var(--green-border)}
+.badge.p{background:var(--purple-light);color:var(--purple);border-color:var(--purple)}
+.badge.soon{opacity:.55}
+.formula-strip{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 18px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)}
+.formula-strip code{font-family:"SF Mono",Consolas,Menlo,monospace;font-size:12px;color:var(--text2);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:420px 1fr;gap:18px;align-items:start}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.panel h2{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel h2 .hint{font-size:11px;font-weight:500;color:var(--text3)}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.btn{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--accent-border);background:var(--accent-light);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{opacity:.9}
+.btn.sm{padding:5px 9px;font-size:11.5px}
+.btn.ghost{background:transparent}
+.mol-card{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden}
+.mol-card .head{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surface2);cursor:pointer}
+.mol-card .head .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(0,0,0,.05) inset}
+.mol-card .head input.name{flex:1;background:transparent;border:none;font-weight:700;font-size:13px;color:var(--text);min-width:0}
+.mol-card .head input.name:focus{outline:none}
+.mol-card .body{padding:10px;display:none}
+.mol-card.open .body{display:block}
+.mol-card .body label{font-size:10.5px;font-weight:600;color:var(--text2);display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.03em}
+.mol-card .body textarea{width:100%;min-height:70px;font-family:"SF Mono",Consolas,Menlo,monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);resize:vertical}
+.mol-card .subsection{border-top:1px dashed var(--border);margin-top:10px;padding-top:10px}
+.mol-card .subsection .sectitle{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:2px}
+.mol-card .subsection .secdesc{font-size:10.5px;color:var(--text3);margin-bottom:6px}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.fieldgrid label.inline{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text2);text-transform:none}
+.mol-card input[type=text], .mol-card input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 7px;color:var(--text);font-size:12px}
+.computed-line{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:6px 8px;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.computed-line b{color:var(--text)}
+.note{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap}
+.tab{font-size:12.5px;font-weight:600;padding:8px 14px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--accent);border-color:var(--accent)}
+.chart-wrap{position:relative;height:380px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:14px}
+.mcard{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;background:var(--surface2)}
+.mcard .dyehead{display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;margin-bottom:8px}
+.mcard .dyehead .dot{width:9px;height:9px;border-radius:50%}
+.mcard .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:11.5px}
+.mcard .stats b{display:block;font-size:14px;color:var(--text)}
+.mcard .stats .tag{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px}
+.tag.high{background:var(--green-light);color:var(--green)}
+.tag.mod{background:var(--amber-light);color:var(--amber)}
+.tag.low{background:var(--red-light);color:var(--red)}
+table.datatable{width:100%;border-collapse:collapse;font-size:11.5px}
+table.datatable th,table.datatable td{padding:5px 7px;border-bottom:1px solid var(--border);text-align:right}
+table.datatable th:first-child,table.datatable td:first-child{text-align:left}
+table.datatable thead th{position:sticky;top:0;background:var(--surface);font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.02em}
+.table-scroll{max-height:480px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+footer{margin-top:30px;border-top:1px solid var(--border);padding-top:16px;font-size:11.5px;color:var(--text3)}
+.flex-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.info-box{background:var(--accent-light);border:1px solid var(--accent-border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px}
+.info-box b{color:var(--text)}
+.warn-box{background:var(--amber-light);border:1px solid #f3d59c;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px}
+details.howto{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
+details.howto summary{cursor:pointer;font-weight:700;font-size:12.5px}
+details.howto .content{margin-top:10px;font-size:12px;color:var(--text2);line-height:1.7}
+details.howto code{background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:4px;font-size:11px}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}
+.hub-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:.15s}
+.hub-card.live:hover{border-color:var(--accent-border);transform:translateY(-2px)}
+.hub-card .icon{font-size:28px;margin-bottom:10px}
+.hub-card h3{font-size:15px;margin-bottom:6px}
+.hub-card p{font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.hub-card.soon{opacity:.55}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>DSSC Dye <span>Descriptor</span> Toolkit</h1>
+      <div class="subtitle">A growing set of small, focused calculators that turn raw DFT/TD-DFT output into quantitative structural, electronic, and optical descriptors for dye-sensitized solar cell sensitizers &mdash; built one tool at a time.</div>
+      <div class="badges">
+        <span class="badge g">Geometrical descriptors: 1 tool live</span>
+        <span class="badge soon">Electronic descriptors: planned</span>
+        <span class="badge soon">Optical descriptors: planned</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="hub-grid">
+    <a class="hub-card live" href="coplanarity.html" style="text-decoration:none;color:inherit">
+      <div class="icon">&#128300;</div>
+      <h3>Coplanarity / Planarity Descriptor</h3>
+      <p>Quantify how planar a dye's backbone is, two ways: a corrected dihedral-angle averaging formula (quick, from angles alone), or the literature-standard Molecular Planarity Parameter (MPP) &amp; Span of Deviation from Plane (SDP) computed from a best-fit plane through the actual 3D geometry.</p>
+      <span class="badge g">Live</span>
+    </a>
+    <div class="hub-card soon">
+      <div class="icon">&#9889;</div>
+      <h3>Electronic Descriptors</h3>
+      <p>HOMO/LUMO levels, &Delta;G<sub>inj</sub>/&Delta;G<sub>reg</sub>, electronegativity, chemical hardness/softness, electrophilicity index, dipole moment &mdash; from ground-state DFT output.</p>
+      <span class="badge soon">Planned</span>
+    </div>
+    <div class="hub-card soon">
+      <div class="icon">&#127909;</div>
+      <h3>Optical Descriptors</h3>
+      <p>Oscillator strength, transition character (CT vs. local), light-harvesting efficiency, absorption onset/bandgap &mdash; from TD-DFT excited-state output.</p>
+      <span class="badge soon">Planned</span>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:24px">
+    <h2>Related tools</h2>
+    <p class="note">For the full IPCE &rarr; J&ndash;V &rarr; efficiency pipeline (light-harvesting efficiency, AM1.5G-integrated J<sub>sc</sub>, Marcus-theory V<sub>oc</sub>, single-diode J&ndash;V curve, FF, &eta;), see the companion <a href="https://dini94.github.io/dssc-ipce-simulator/" target="_blank">DSSC IPCE / J&ndash;V Simulator</a>.</p>
+  </div>
+
+  <footer>
+    Each calculator in this toolkit is a single self-contained HTML file &mdash; no build step, no install, just open it. New descriptor categories are added incrementally as they're validated against real DFT/TD-DFT data.
+  </footer>
+</div>
+</body>
+</html>

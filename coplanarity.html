@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coplanarity / Planarity Descriptor &#8212; DSSC Descriptor Toolkit</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fb;--surface:#ffffff;--surface2:#f1f3f7;--border:#e2e5ec;
+  --text:#1a1d23;--text2:#5a6070;--text3:#9099aa;
+  --accent:#2563eb;--accent-light:#eff4ff;--accent-border:#bfcfff;
+  --green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --red:#dc2626;--red-light:#fef2f2;
+  --purple:#7c3aed;--purple-light:#f5f3ff;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3348;
+    --text:#e8eaf2;--text2:#8b92a8;--text3:#555d72;
+    --accent:#3b82f6;--accent-light:#1e2a4a;--accent-border:#2d4a9e;
+    --green:#22c55e;--green-light:#0a1f12;--green-border:#166534;
+    --amber:#fbbf24;--amber-light:#1c1500;
+    --red:#f87171;--red-light:#2a1414;
+    --purple:#a78bfa;--purple-light:#1e1a3a;
+  }
+}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 22px 60px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--text2);font-size:13.5px;margin-top:4px;max-width:720px}
+.crumbs{font-size:12px;color:var(--text3);margin-bottom:10px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border)}
+.badge.g{background:var(--green-light);color:var(--green);border-color:var(--green-border)}
+.badge.p{background:var(--purple-light);color:var(--purple);border-color:var(--purple)}
+.badge.soon{opacity:.55}
+.formula-strip{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 18px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)}
+.formula-strip code{font-family:"SF Mono",Consolas,Menlo,monospace;font-size:12px;color:var(--text2);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:420px 1fr;gap:18px;align-items:start}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.panel h2{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel h2 .hint{font-size:11px;font-weight:500;color:var(--text3)}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.btn{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--accent-border);background:var(--accent-light);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{opacity:.9}
+.btn.sm{padding:5px 9px;font-size:11.5px}
+.btn.ghost{background:transparent}
+.mol-card{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden}
+.mol-card .head{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surface2);cursor:pointer}
+.mol-card .head .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(0,0,0,.05) inset}
+.mol-card .head input.name{flex:1;background:transparent;border:none;font-weight:700;font-size:13px;color:var(--text);min-width:0}
+.mol-card .head input.name:focus{outline:none}
+.mol-card .body{padding:10px;display:none}
+.mol-card.open .body{display:block}
+.mol-card .body label{font-size:10.5px;font-weight:600;color:var(--text2);display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.03em}
+.mol-card .body textarea{width:100%;min-height:70px;font-family:"SF Mono",Consolas,Menlo,monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);resize:vertical}
+.mol-card .subsection{border-top:1px dashed var(--border);margin-top:10px;padding-top:10px}
+.mol-card .subsection .sectitle{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:2px}
+.mol-card .subsection .secdesc{font-size:10.5px;color:var(--text3);margin-bottom:6px}
+.dihrow-list{display:flex;flex-direction:column;gap:6px}
+.dihrow{display:flex;gap:6px;align-items:center}
+.dihrow .dih-label{flex:1.4;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 7px;color:var(--text);font-size:12px;min-width:0}
+.dihrow .dih-phi{flex:0.7;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 7px;color:var(--text);font-size:12px;min-width:0}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.fieldgrid label.inline{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text2);text-transform:none}
+.mol-card input[type=text], .mol-card input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 7px;color:var(--text);font-size:12px}
+.computed-line{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:6px 8px;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.computed-line b{color:var(--text)}
+.note{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap}
+.tab{font-size:12.5px;font-weight:600;padding:8px 14px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--accent);border-color:var(--accent)}
+.chart-wrap{position:relative;height:380px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:14px}
+.mcard{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;background:var(--surface2)}
+.mcard .dyehead{display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;margin-bottom:8px}
+.mcard .dyehead .dot{width:9px;height:9px;border-radius:50%}
+.mcard .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:11.5px}
+.mcard .stats b{display:block;font-size:14px;color:var(--text)}
+.mcard .stats .tag{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px}
+.tag.high{background:var(--green-light);color:var(--green)}
+.tag.mod{background:var(--amber-light);color:var(--amber)}
+.tag.low{background:var(--red-light);color:var(--red)}
+table.datatable{width:100%;border-collapse:collapse;font-size:11.5px}
+table.datatable th,table.datatable td{padding:5px 7px;border-bottom:1px solid var(--border);text-align:right}
+table.datatable th:first-child,table.datatable td:first-child{text-align:left}
+table.datatable thead th{position:sticky;top:0;background:var(--surface);font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.02em}
+.table-scroll{max-height:480px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+footer{margin-top:30px;border-top:1px solid var(--border);padding-top:16px;font-size:11.5px;color:var(--text3)}
+.flex-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.info-box{background:var(--accent-light);border:1px solid var(--accent-border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px}
+.info-box b{color:var(--text)}
+.warn-box{background:var(--amber-light);border:1px solid #f3d59c;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px}
+details.howto{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
+details.howto summary{cursor:pointer;font-weight:700;font-size:12.5px}
+details.howto .content{margin-top:10px;font-size:12px;color:var(--text2);line-height:1.7}
+details.howto code{background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:4px;font-size:11px}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}
+.hub-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:.15s}
+.hub-card.live:hover{border-color:var(--accent-border);transform:translateY(-2px)}
+.hub-card .icon{font-size:28px;margin-bottom:10px}
+.hub-card h3{font-size:15px;margin-bottom:6px}
+.hub-card p{font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.hub-card.soon{opacity:.55}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="crumbs"><a href="index.html">&larr; Descriptor Toolkit</a></div>
+  <header class="top">
+    <div>
+      <h1>Coplanarity <span>Descriptor</span></h1>
+      <div class="subtitle">Quantifies how much donor&rarr;acceptor electronic coupling survives the &pi;-bridge, derived from the DFT dihedral angle at each rotatable junction using a superexchange-based coupling model. A separate, complementary whole-molecule <b>Planarity</b> check (MPP/SDP, from atomic coordinates) is included below for cases where you have full geometry.</div>
+      <div class="badges">
+        <span class="badge g">per-junction cos&sup2;&phi; &mdash; Venkataraman et al., <i>Nature</i> 2006, 442, 904; Che &amp; Perepichka, <i>Angew. Chem. Int. Ed.</i> 2021, 60, 1364</span>
+        <span class="badge p">multi-junction combination &mdash; new, derived from McConnell superexchange theory, <i>J. Chem. Phys.</i> 1961, 35, 508</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="panel">
+    <h2>Where the dihedral junctions come from, and how they combine</h2>
+    <svg width="100%" viewBox="0 0 680 320" role="img" style="max-width:680px">
+      <title>Reference diagram of a donor-pi-spacer-acceptor dye showing where the dihedral angles are measured and how they combine into the coupling-retention descriptor</title>
+      <desc>Three labeled regions in a row: Donor, pi-spacer, and Acceptor, each containing a simplified ring-and-bond sketch. A rotation icon sits between Donor and pi-spacer labeled phi-1, and another sits between pi-spacer and Acceptor labeled phi-2. Below, a derivation chain shows each junction contributing a per-junction coupling retention term cos squared phi, which multiply together as a raw product Pi-DA representing the donor-to-acceptor coupling retained through the whole bridge, following McConnell's superexchange model.</desc>
+      <rect x="20" y="20" width="220" height="140" rx="12" fill="var(--amber-light)" stroke="var(--amber)" stroke-width="0.75"></rect>
+      <text x="36" y="40" font-size="14" font-weight="500" fill="var(--text)">Donor</text>
+      <rect x="270" y="20" width="160" height="140" rx="12" fill="var(--surface2)" stroke="var(--border)" stroke-width="0.75"></rect>
+      <text x="286" y="40" font-size="14" font-weight="500" fill="var(--text)">&#960;-spacer</text>
+      <rect x="460" y="20" width="170" height="140" rx="12" fill="var(--accent-light)" stroke="var(--accent-border)" stroke-width="0.75"></rect>
+      <text x="476" y="40" font-size="14" font-weight="500" fill="var(--text)">Acceptor</text>
+      <line x1="104" y1="105" x2="126" y2="105" stroke="var(--text2)" stroke-width="1.5"></line>
+      <circle cx="80" cy="105" r="24" fill="none" stroke="var(--text2)" stroke-width="1.5"></circle>
+      <circle cx="150" cy="105" r="24" fill="none" stroke="var(--text2)" stroke-width="1.5"></circle>
+      <line x1="174" y1="105" x2="240" y2="105" stroke="var(--text2)" stroke-width="1.5"></line>
+      <circle cx="350" cy="105" r="24" fill="none" stroke="var(--text2)" stroke-width="1.5"></circle>
+      <line x1="270" y1="105" x2="326" y2="105" stroke="var(--text2)" stroke-width="1.5"></line>
+      <line x1="374" y1="105" x2="430" y2="105" stroke="var(--text2)" stroke-width="1.5"></line>
+      <line x1="460" y1="105" x2="497" y2="105" stroke="var(--text2)" stroke-width="1.5"></line>
+      <circle cx="515" cy="105" r="18" fill="none" stroke="var(--text2)" stroke-width="1.5"></circle>
+      <line x1="528" y1="98" x2="541" y2="90" stroke="var(--text2)" stroke-width="1.5"></line>
+      <line x1="528" y1="112" x2="541" y2="120" stroke="var(--text2)" stroke-width="1.5"></line>
+      <circle cx="548" cy="88" r="9" fill="var(--red)" opacity="0.75"></circle>
+      <circle cx="548" cy="122" r="9" fill="var(--red)" opacity="0.75"></circle>
+      <path d="M248,93 A12,12 0 0,1 248,117" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"></path>
+      <path d="M262,117 A12,12 0 0,1 262,93" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"></path>
+      <path d="M438,93 A12,12 0 0,1 438,117" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"></path>
+      <path d="M452,117 A12,12 0 0,1 452,93" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"></path>
+      <text x="255" y="165" font-size="13" font-weight="500" text-anchor="middle" fill="var(--text)">&#966;&#8321;</text>
+      <text x="445" y="165" font-size="13" font-weight="500" text-anchor="middle" fill="var(--text)">&#966;&#8322;</text>
+      <text x="255" y="188" font-size="12" text-anchor="middle" fill="var(--text2)">Donor&ndash;spacer dihedral</text>
+      <text x="445" y="188" font-size="12" text-anchor="middle" fill="var(--text2)">Spacer&ndash;acceptor dihedral</text>
+      <rect x="40" y="215" width="600" height="90" rx="10" fill="var(--surface2)" stroke="var(--border)" stroke-width="0.75"></rect>
+      <text x="58" y="238" font-size="12" font-weight="500" fill="var(--text)">Step 1 &mdash; per-junction coupling retained:</text>
+      <text x="58" y="258" font-size="13" fill="var(--text2)">c&#8321; = cos&sup2;(&#966;&#8321;)  &nbsp;&nbsp; c&#8322; = cos&sup2;(&#966;&#8322;)</text>
+      <text x="58" y="280" font-size="12" font-weight="500" fill="var(--text)">Step 2 &mdash; multiply along the bridge (McConnell superexchange):</text>
+      <text x="58" y="300" font-size="13" fill="var(--accent)">&#928;<tspan baseline-shift="sub" font-size="9">DA</tspan> = c&#8321; &times; c&#8322;  &nbsp; (donor&#8594;acceptor coupling retained)</text>
+    </svg>
+    <p class="note">A typical D&ndash;&pi;&ndash;A dye has two rotatable junctions: where the donor connects to the &pi;-spacer (&phi;&#8321;), and where the &pi;-spacer connects to the acceptor (&phi;&#8322;). Each junction independently attenuates the orbital overlap by cos&sup2;(&phi;); because the charge has to pass through every junction in sequence to get from donor to acceptor, the per-junction retention values multiply together &mdash; this is the two-junction case of the &Pi;<sub>DA</sub> formula in the strip below.</p>
+  </div>
+
+  <div class="formula-strip">
+    <code>per junction (established): c<sub>i</sub> = cos&sup2;(&phi;<sub>i</sub>)</code>
+    <code><b>&Pi;<sub>DA</sub> = &prod;<sub>i</sub> cos&sup2;(&phi;<sub>i</sub>)</b>  &mdash; coupling retained through the whole bridge (new)</code>
+    <code><b>C<sub>avg</sub> = &Pi;<sub>DA</sub><sup>1/n</sup></b>  &mdash; per-junction average, length-normalized (new)</code>
+    <code><b>&beta;<sub>eff</sub> = &minus;ln(C<sub>avg</sub>)</b>  &mdash; decoupling exponent, nats/junction (new)</code>
+    <code>legacy/reference: p<sub>cos</sub>=(1/n)&Sigma;|cos&phi;<sub>i</sub>|,&nbsp; p<sub>linear</sub>=1&minus;(1/n)&Sigma;(&delta;<sub>i</sub>/90&deg;)</code>
+    <code>whole-molecule planarity (Mode C): MPP = RMS(d<sub>i</sub>),&nbsp; SDP = max(d<sub>i</sub>)&minus;min(d<sub>i</sub>)</code>
+  </div>
+
+  <details class="howto" open>
+    <summary>Why &Pi;<sub>DA</sub> (product), not C (geometric mean) &mdash; the reasoning</summary>
+    <div class="content">
+      <b>Coplanarity vs. planarity.</b> "Coplanarity" is the term DSSC/D&ndash;&pi;&ndash;A dye papers use specifically for dihedral-angle-based assessments of whether linked donor/spacer/acceptor units share a plane &mdash; that's what this tool computes. "Planarity" (Mode C below) is reserved for whole-molecule, atom-position-based metrics.<br><br>
+      <b>Why cos&sup2;(&phi;) per junction.</b> The overlap between two &pi;-systems joined by a single bond scales as cos&sup2;(&phi;) of the dihedral between them &mdash; a direct consequence of the p-orbital overlap integral, confirmed experimentally in single-molecule break-junction conductance measurements of torsion-controlled biphenyldithiols (conductance G &prop; cos&sup2;&theta; across the full 0&ndash;90&deg; range) and reproduced by independent tight-binding/ab initio transport calculations. This term is unchanged from before and is solid, established physics &mdash; it is not the part being revised here.<br><br>
+      <b>What changed: how junctions combine.</b> An earlier version of this tool combined multiple junctions with a geometric mean (C = [c&#8321;&middot;c&#8322;]<sup>1/2</sup>), justified only by a "weakest-link" analogy &mdash; reasonable-sounding, but not derived from anything. A more rigorous starting point is McConnell's superexchange model for donor&ndash;bridge&ndash;acceptor electron transfer: it shows that the electronic coupling between a donor and an acceptor mediated by a chain of bridge units factorizes as a <i>raw product</i> of the per-unit couplings, not an n-th-root-normalized average. Applying the same logic to dihedral-twist-induced decoupling at each junction gives &Pi;<sub>DA</sub> = c&#8321;&times;c&#8322;&times;...&times;c<sub>n</sub> as the physically meaningful quantity: the actual fraction of donor&rarr;acceptor electronic coupling that survives transmission through the whole bridge.<br><br>
+      <b>Why this matters in practice.</b> &Pi;<sub>DA</sub> correctly captures that a longer bridge with several junctions, each individually well-aligned, still accumulates more total attenuation than a short bridge &mdash; a real, physically expected effect that a geometric mean (which renormalizes per junction) hides. Because &Pi;<sub>DA</sub> shrinks with bridge length even for equally-planar junctions, two companion quantities are also reported: <b>C<sub>avg</sub> = &Pi;<sub>DA</sub><sup>1/n</sup></b>, the per-junction average (useful for comparing dyes with different numbers of junctions on equal footing &mdash; this is numerically identical to the old "C"), and <b>&beta;<sub>eff</sub> = &minus;ln(C<sub>avg</sub>)</b>, an effective decoupling exponent in nats per junction, directly analogous to the &beta; decay constant used to describe how electron-transfer rate falls off with molecular wire length in the broader electron-transfer literature.<br><br>
+      <b>Honesty about what's new vs. established.</b> The per-junction cos&sup2;&phi; law and the product-factorization principle for bridge-mediated coupling are both established, peer-reviewed physics (decades old in the case of McConnell's model). What is new here is applying that combination principle specifically to dihedral-angle-derived coplanarity descriptors for DSSC D&ndash;&pi;&ndash;A dyes &mdash; to our knowledge this specific synthesis (&Pi;<sub>DA</sub>, C<sub>avg</sub>, &beta;<sub>eff</sub> as a descriptor set) has not been published elsewhere. Treat it as a working framework to validate against experimental/computed photovoltaic performance as more dyes are added.<br><br>
+      The legacy p<sub>linear</sub>/p<sub>cos</sub> values are kept alongside for transparency, so you can see how the new framework differs from a simple average.
+    </div>
+  </details>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="panel">
+        <h2>Molecule Library <span class="hint" id="molCount"></span></h2>
+        <div class="preset-row">
+          <button class="btn primary sm" onclick="loadPreset('N719')">+ N719 (real DFT geometry)</button>
+          <button class="btn ghost sm" onclick="addBlankMol()">+ Custom molecule</button>
+        </div>
+        <div id="molList"></div>
+        <div class="warn-box" style="margin-top:10px">No geometry/dihedral data yet for FPCN, FTCN or FFCN &mdash; paste your DFT-optimized coordinates or measured dihedral angles for those dyes via "+ Custom molecule" and they'll compute alongside N719.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="panel">
+        <h2>Coplanarity &amp; Planarity Metrics</h2>
+        <div class="metrics" id="metrics"></div>
+      </div>
+
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab active" data-tab="dihedrals">Per-Junction Breakdown (Coplanarity)</div>
+          <div class="tab" data-tab="atoms">Per-Atom Deviation (Planarity, Mode C)</div>
+          <div class="tab" data-tab="compare">Comparison Table</div>
+        </div>
+        <div id="tab-dihedrals" class="tabpane"><div class="table-scroll"><table class="datatable" id="dihedralTable"></table></div></div>
+        <div id="tab-atoms" class="tabpane" style="display:none"><div class="chart-wrap"><canvas id="chartAtoms"></canvas></div></div>
+        <div id="tab-compare" class="tabpane" style="display:none"><div class="table-scroll"><table class="datatable" id="compareTable"></table></div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Coplanarity index: Che, Y. &amp; Perepichka, D. F. <i>Quantifying Planarity in the Design of Organic Electronic Materials</i>, Angew. Chem. Int. Ed. 2021, 60, 1364&ndash;1373 (cos&sup2;&phi; planarity index); single-junction physical basis cross-checked against biphenyl-dithiol STM conductance and NLO torsion studies. Whole-molecule planarity (Mode C): Lu, T. <i>J Mol Model</i> 2021, 27, 263 (MPP/SDP). Multi-junction geometric-mean combination is a reasoned extension proposed here, not yet a published formula &mdash; treat C for n&gt;1 as a working hypothesis to validate against your own data as more dyes are added.<br><br>
+    <b>Descriptor guide.</b> Three new coplanarity descriptors are reported for each dye, all derived from per-junction cos&sup2;&phi; values:<br>
+    &bull; <b>&Pi;<sub>DA</sub></b> (coupling retained through the full bridge) &mdash; raw product of all per-junction cos&sup2;(&phi;<sub>i</sub>), motivated by McConnell's superexchange coupling factorization. For a two-junction dye with both junctions at &phi;=0/180&deg;, &Pi;<sub>DA</sub>=1.00; any twist reduces it. Band (for n=2): <b>Planar</b> &Pi;<sub>DA</sub>&ge;0.81 (both junctions &ge;90% retained), <b>Moderate</b> 0.25&le;&Pi;<sub>DA</sub>&lt;0.81, <b>Twisted</b> &Pi;<sub>DA</sub>&lt;0.25. For n=1: same as C<sub>avg</sub>.<br>
+    &bull; <b>C<sub>avg</sub> = &Pi;<sub>DA</sub><sup>1/n</sup></b> &mdash; per-junction geometric mean, useful for comparing dyes with different numbers of junctions on equal footing. Band: <b>Planar</b> &ge;0.90, <b>Moderate</b> 0.50&ndash;0.90, <b>Twisted</b> &lt;0.50 (these thresholds are derived from the physical meaning of cos&sup2;&phi; as a coupling-retention fraction, as in Che &amp; Perepichka 2021).<br>
+    &bull; <b>&beta;<sub>eff</sub> = &minus;ln(C<sub>avg</sub>)</b> &mdash; effective decoupling exponent in nats/junction, analogous to the &beta; decay constant for molecular-wire electron-transfer rates. Smaller is better; &beta;<sub>eff</sub>=0 means perfect coupling, &beta;<sub>eff</sub>&rarr;&infin; means coupling fully broken at 90&deg;.<br><br>
+    Per-junction cos&sup2;&phi; law: Venkataraman et al., <i>Nature</i> 2006, 442, 904 (experimental confirmation). Multi-junction product rule: adapted from McConnell, <i>J. Chem. Phys.</i> 1961, 35, 508 (superexchange theory). C<sub>avg</sub> bands: Che &amp; Perepichka, <i>Angew. Chem. Int. Ed.</i> 2021, 60, 1364. MPP/SDP: Lu, <i>J Mol Model</i> 2021, 27, 263. &Pi;<sub>DA</sub>/C<sub>avg</sub>/&beta;<sub>eff</sub> as a coplanarity descriptor set for DSSC D&ndash;&pi;&ndash;A dyes is proposed here for the first time.
+  </footer>
+</div>
+
+<script>
+
+// ====================== PERIODIC TABLE ======================
+const PERIODIC_TABLE = ["","H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca",
+"Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
+"Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe"];
+
+// ====================== GEOMETRY PARSER ======================
+function parseGeometryText(text){
+  const lines = text.split("\n").map(l=>l.trim()).filter(l=>l.length>0);
+  const atoms = [];
+  for(const line of lines){
+    const tok = line.split(/[\s,;\t]+/).filter(Boolean);
+    if(tok.length === 1 && /^\d+$/.test(tok[0])) continue;
+    if(tok.length === 6){
+      const nums = tok.map(Number);
+      if(!nums.some(isNaN) && Number.isInteger(nums[1]) && nums[1]>=1 && nums[1]<=110 && Number.isInteger(nums[0])){
+        const sym = PERIODIC_TABLE[nums[1]] || ("Z"+nums[1]);
+        atoms.push({el: sym, x: nums[3], y: nums[4], z: nums[5]});
+        continue;
+      }
+    }
+    if(tok.length === 4){
+      const x = parseFloat(tok[1]), y = parseFloat(tok[2]), z = parseFloat(tok[3]);
+      if(/^[A-Za-z]{1,2}\d*\**$/.test(tok[0]) && !isNaN(x) && !isNaN(y) && !isNaN(z)){
+        const el = tok[0].replace(/[\d*]+$/,"");
+        atoms.push({el, x, y, z});
+        continue;
+      }
+    }
+  }
+  return atoms;
+}
+
+function parseAtomRange(rangeStr, n){
+  if(!rangeStr || !rangeStr.trim()) return null; // null = all atoms
+  const include = new Set();
+  rangeStr.split(",").forEach(part=>{
+    part = part.trim();
+    if(!part) return;
+    if(part.includes("-")){
+      const [a,b] = part.split("-").map(s=>parseInt(s.trim(),10));
+      if(!isNaN(a) && !isNaN(b)) for(let i=a;i<=b;i++) include.add(i);
+    } else {
+      const v = parseInt(part,10);
+      if(!isNaN(v)) include.add(v);
+    }
+  });
+  return include;
+}
+
+function applyAtomFilter(atoms, excludeH, rangeStr){
+  const rangeSet = parseAtomRange(rangeStr, atoms.length);
+  return atoms.filter((a,i)=>{
+    if(excludeH && a.el === "H") return false;
+    if(rangeSet && !rangeSet.has(i+1)) return false;
+    return true;
+  });
+}
+
+// ====================== 3x3 SYMMETRIC EIGENSOLVER (Smith's analytic method) ======================
+function eig3x3Symmetric(a11,a12,a13,a22,a23,a33){
+  const p1 = a12*a12 + a13*a13 + a23*a23;
+  if (p1 < 1e-14) {
+    return [a11,a22,a33].sort((a,b)=>b-a);
+  }
+  const q = (a11+a22+a33)/3;
+  const b11=a11-q, b22=a22-q, b33=a33-q;
+  const p2 = b11*b11+b22*b22+b33*b33 + 2*p1;
+  const p = Math.sqrt(p2/6);
+  const inv = 1/p;
+  const B = { b11: inv*b11, b12: inv*a12, b13: inv*a13, b22: inv*b22, b23: inv*a23, b33: inv*b33 };
+  const detB = B.b11*(B.b22*B.b33 - B.b23*B.b23)
+             - B.b12*(B.b12*B.b33 - B.b23*B.b13)
+             + B.b13*(B.b12*B.b23 - B.b22*B.b13);
+  let r = detB/2;
+  r = Math.max(-1, Math.min(1, r));
+  const phi = Math.acos(r)/3;
+  const eig1 = q + 2*p*Math.cos(phi);
+  const eig3 = q + 2*p*Math.cos(phi + 2*Math.PI/3);
+  const eig2 = 3*q - eig1 - eig3;
+  return [eig1, eig2, eig3];
+}
+function cross(u,v){ return [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]]; }
+function vnorm(v){ return Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); }
+function eigenvectorForEigenvalue(a11,a12,a13,a22,a23,a33,lambda){
+  const M = {m11:a11-lambda, m12:a12, m13:a13, m22:a22-lambda, m23:a23, m33:a33-lambda};
+  const rows = [[M.m11,M.m12,M.m13],[M.m12,M.m22,M.m23],[M.m13,M.m23,M.m33]];
+  let best=null, bestNorm=-1;
+  for(let i=0;i<3;i++) for(let j=i+1;j<3;j++){
+    const c = cross(rows[i], rows[j]);
+    const n = vnorm(c);
+    if(n>bestNorm){ bestNorm=n; best=c; }
+  }
+  if(bestNorm<1e-9) return [0,0,1];
+  return [best[0]/bestNorm, best[1]/bestNorm, best[2]/bestNorm];
+}
+function fitPlane(points){
+  const n = points.length;
+  let cx=0,cy=0,cz=0;
+  for(const p of points){ cx+=p[0]; cy+=p[1]; cz+=p[2]; }
+  cx/=n; cy/=n; cz/=n;
+  let a11=0,a12=0,a13=0,a22=0,a23=0,a33=0;
+  for(const p of points){
+    const x=p[0]-cx, y=p[1]-cy, z=p[2]-cz;
+    a11+=x*x; a12+=x*y; a13+=x*z; a22+=y*y; a23+=y*z; a33+=z*z;
+  }
+  a11/=n;a12/=n;a13/=n;a22/=n;a23/=n;a33/=n;
+  const eigs = eig3x3Symmetric(a11,a12,a13,a22,a23,a33);
+  const normal = eigenvectorForEigenvalue(a11,a12,a13,a22,a23,a33,eigs[2]);
+  return {centroid:[cx,cy,cz], normal};
+}
+function planarityMetricsXYZ(atoms){
+  const points = atoms.map(a=>[a.x,a.y,a.z]);
+  const {centroid, normal} = fitPlane(points);
+  const [A,B,C] = normal;
+  const D = -(A*centroid[0]+B*centroid[1]+C*centroid[2]);
+  const denom = Math.sqrt(A*A+B*B+C*C);
+  const ds = points.map(p => (A*p[0]+B*p[1]+C*p[2]+D)/denom);
+  const mpp = Math.sqrt(ds.reduce((s,d)=>s+d*d,0)/ds.length);
+  const sdp = Math.max(...ds) - Math.min(...ds);
+  return {mpp, sdp, ds};
+}
+
+// ====================== DIHEDRAL / COPLANARITY (superexchange-based) ======================
+function dihedralMetrics(dihedrals){
+  return dihedrals
+    .filter(d => d.phi !== null && d.phi !== "" && !isNaN(parseFloat(d.phi)))
+    .map(d=>{
+      const phi = parseFloat(d.phi);
+      const norm = ((phi % 180) + 180) % 180;
+      const delta = Math.min(norm, 180-norm);
+      const pLinear = 1 - delta/90;
+      const pCos = Math.abs(Math.cos(phi*Math.PI/180));
+      const cos2 = Math.pow(Math.cos(phi*Math.PI/180), 2);
+      return {label: d.label || "(unlabeled)", phi, delta, pLinear, pCos, cos2};
+    });
+}
+// Pi_DA: raw (non-normalized) product of per-junction cos^2(phi), motivated by McConnell's
+// superexchange model (J. Chem. Phys. 1961, 35, 508), where donor-acceptor electronic coupling
+// through a bridge factorizes as a PRODUCT of per-unit couplings, not an n-th-root average.
+// This is the physically meaningful quantity: actual fraction of D->A coupling retained
+// after passing through the full pi-bridge.
+function piDA(dih){
+  const n = dih.length;
+  if(n===0) return null;
+  return dih.reduce((p,d)=>p*Math.max(d.cos2,0), 1);
+}
+// C_avg: bridge-length-normalized companion to Pi_DA (= Pi_DA^(1/n)), i.e. the per-junction
+// geometric mean. Useful for comparing dyes with different numbers of junctions on equal footing.
+function cAvgFromPi(pi, n){
+  if(pi===null || n===0) return null;
+  return Math.pow(Math.max(pi,1e-300), 1/n);
+}
+// beta_eff: effective decoupling exponent, in nats per junction (= -ln(C_avg)). Analogous to the
+// beta decay constant used for molecular-wire electron-transfer rates (rate ~ exp(-beta*r)),
+// but normalized per dihedral junction rather than per unit length.
+function betaEff(cAvg){
+  if(cAvg===null || cAvg<=0) return null;
+  return -Math.log(cAvg);
+}
+function defaultDihedrals(){
+  return [
+    {id:"j1", label:"Donor\u2013\u03c0-spacer", phi:5},
+    {id:"j2", label:"\u03c0-spacer\u2013Acceptor", phi:175}
+  ];
+}
+
+function planarityTag(value, highCut, modCut, higherIsBetter){
+  let cls, label;
+  if(higherIsBetter){
+    if(value>=highCut){cls="high";label="planar";}
+    else if(value>=modCut){cls="mod";label="moderate";}
+    else {cls="low";label="twisted";}
+  } else {
+    if(value<=highCut){cls="high";label="planar";}
+    else if(value<=modCut){cls="mod";label="moderate";}
+    else {cls="low";label="twisted";}
+  }
+  return `<span class="tag ${cls}">${label}</span>`;
+}
+
+// ====================== STATE ======================
+let molStore = [];
+let molSeq = 0;
+const PALETTE = ["#2563eb","#16a34a","#d97706","#dc2626","#7c3aed","#0891b2","#db2777","#65a30d"];
+function nextColor(){ return PALETTE[molSeq % PALETTE.length]; }
+
+const N719_GEOM = `Ru  -0.010792  -0.075696  -0.614287
+N  -1.806585  0.955391  -0.784224
+C  -2.825733  0.480385  -0.019632
+C  -2.047878  1.921877  -1.692315
+C  -4.129195  0.964389  -0.178296
+C  -3.312211  2.466996  -1.871384
+H  -1.190898  2.227374  -2.282510
+C  -4.381226  1.967473  -1.116193
+H  -4.928460  0.575577  0.442631
+H  -3.475716  3.255666  -2.596784
+N  1.790355  -1.091330  -0.421749
+C  2.075067  -2.256957  -1.029350
+C  2.779749  -0.408247  0.221098
+C  3.356435  -2.798501  -1.028943
+H  1.243925  -2.732439  -1.538214
+C  4.079709  -0.912875  0.274604
+C  4.384274  -2.113857  -0.367999
+H  3.517379  -3.750533  -1.525006
+H  4.874057  -0.393483  0.795954
+N  -1.126646  -0.938224  0.907516
+C  -2.439128  -0.554562  0.955455
+C  -0.694759  -1.868638  1.779893
+C  -3.317996  -1.109940  1.885638
+C  -1.525498  -2.471523  2.715558
+H  0.353071  -2.135040  1.708087
+C  -2.874376  -2.093285  2.770777
+H  -4.352423  -0.795188  1.947148
+H  -1.096231  -3.198495  3.398038
+N  1.047111  1.195556  0.643242
+C  0.575103  2.324639  1.212522
+C  2.357640  0.865641  0.830305
+C  1.365093  3.172543  1.972314
+H  -0.470671  2.542892  1.032162
+C  3.214650  1.696981  1.560370
+C  2.724242  2.869928  2.135054
+H  0.946637  4.063694  2.425798
+H  4.249055  1.403815  1.700347
+N  0.904197  0.910764  -2.177654
+N  -0.853016  -1.481516  -1.859685
+C  -1.529356  -2.278687  -2.419644
+C  1.748309  1.364123  -2.878916
+S  -2.434584  -3.394487  -3.182480
+S  2.885342  2.010861  -3.843231
+C  -5.747957  2.567984  -1.314386
+O  -5.905105  3.732224  -1.590571
+O  -6.811282  1.743466  -1.151176
+C  5.802383  -2.612623  -0.277222
+O  6.532093  -2.308616  0.637164
+O  6.235003  -3.432840  -1.261520
+C  3.570017  3.796036  2.966334
+O  3.107894  4.446163  3.873027
+O  4.889936  3.865159  2.668208
+C  -3.870877  -2.649546  3.751139
+O  -4.870619  -2.046665  4.063539
+O  -3.604257  -3.863304  4.289140
+H  5.617129  -3.465848  -2.006767
+H  5.093574  3.446932  1.818661
+H  -2.868621  -4.306628  3.842569
+H  -6.545161  0.812620  -1.117385`;
+
+function addBlankMol(){
+  molSeq++;
+  molStore.push({
+    id:"m"+molSeq, name:"New molecule "+molSeq, color:nextColor(), open:true,
+    dihedrals: defaultDihedrals(), dihSeq:2,
+    geomText:"", excludeH:true, atomRange:""
+  });
+  renderMols(); compute();
+}
+function loadPreset(key){
+  molSeq++;
+  if(key==="N719"){
+    molStore.push({
+      id:"m"+molSeq, name:"N719 (whole complex)", color:nextColor(), open:false,
+      dihedrals: [], dihSeq:0,
+      geomText:N719_GEOM, excludeH:true, atomRange:"",
+      note:"Ground-state DFT geometry from the CAM-B3LYP/genecp log. No dihedral list yet (N719 doesn't have a single D\u2013\u03c0-A backbone the way the fluorene dyes do). The whole-molecule MPP is large by construction \u2014 N719 is an octahedral Ru complex, not a flat conjugated system. Restrict the atom range to one bipyridyl\u2013NCS wing for a more meaningful planarity comparison."
+    });
+  }
+  renderMols(); compute();
+}
+function removeMol(id){ molStore = molStore.filter(m=>m.id!==id); renderMols(); compute(); }
+function toggleMol(id){ const m=molStore.find(x=>x.id===id); m.open=!m.open; renderMols(); }
+function updateMolField(id, field, value){
+  const m = molStore.find(x=>x.id===id);
+  if(!m) return;
+  if(field==="excludeH") value = !!value;
+  m[field]=value;
+  compute();
+}
+function addDihedralRow(molId){
+  const m = molStore.find(x=>x.id===molId);
+  if(!m) return;
+  m.dihSeq = (m.dihSeq||0)+1;
+  m.dihedrals.push({id:"j"+m.dihSeq, label:"New junction", phi:null});
+  renderMols(); compute();
+}
+function removeDihedralRow(molId, dihId){
+  const m = molStore.find(x=>x.id===molId);
+  if(!m) return;
+  m.dihedrals = m.dihedrals.filter(d=>d.id!==dihId);
+  renderMols(); compute();
+}
+function updateDihedralField(molId, dihId, field, value){
+  const m = molStore.find(x=>x.id===molId);
+  if(!m) return;
+  const d = m.dihedrals.find(x=>x.id===dihId);
+  if(!d) return;
+  d[field] = field==="phi" ? value : value;
+  compute();
+}
+
+function renderMols(){
+  document.getElementById("molCount").textContent = molStore.length + " loaded";
+  const wrap = document.getElementById("molList");
+  wrap.innerHTML = molStore.map(m=>`
+    <div class="mol-card ${m.open?'open':''}">
+      <div class="head" onclick="toggleMol('${m.id}')">
+        <div class="dot" style="background:${m.color}"></div>
+        <input class="name" value="${m.name}" onclick="event.stopPropagation()" onchange="updateMolField('${m.id}','name',this.value)">
+        <button class="btn sm ghost" onclick="event.stopPropagation();removeMol('${m.id}')">&times;</button>
+      </div>
+      <div class="body">
+        ${m.note?`<div class="note" style="margin-bottom:8px">${m.note}</div>`:""}
+        <div class="subsection" style="border-top:none;margin-top:0;padding-top:0">
+          <div class="sectitle">Coplanarity &mdash; backbone dihedral junctions</div>
+          <div class="secdesc">One row per rotatable bond along the D&ndash;&pi;&ndash;A backbone. Most dyes need two (donor&ndash;spacer, spacer&ndash;acceptor), but add as many as your structure actually has &mdash; e.g. two separate donor&ndash;spacer torsions, or two spacer&ndash;acceptor torsions, if there's more than one rotatable bond of a given kind. Label each row however distinguishes it for you.</div>
+          <div class="dihrow-list">
+            ${m.dihedrals.map(d=>`
+              <div class="dihrow">
+                <input type="text" class="dih-label" value="${d.label}" placeholder="Junction name" onchange="updateDihedralField('${m.id}','${d.id}','label',this.value)">
+                <input type="number" class="dih-phi" step="0.1" value="${d.phi===null||d.phi===undefined?'':d.phi}" placeholder="&phi; (deg)" onchange="updateDihedralField('${m.id}','${d.id}','phi',this.value)">
+                <button class="btn sm ghost" onclick="removeDihedralRow('${m.id}','${d.id}')">&times;</button>
+              </div>
+            `).join("") || `<div class="note">No junctions yet.</div>`}
+          </div>
+          <button class="btn sm ghost" style="margin-top:6px" onclick="addDihedralRow('${m.id}')">+ Add junction</button>
+        </div>
+        <div class="subsection">
+          <div class="sectitle">Planarity &mdash; atomic coordinates (Mode C)</div>
+          <div class="secdesc">Paste plain XYZ, a full .xyz file, or a raw Gaussian orientation table</div>
+          <textarea onchange="updateMolField('${m.id}','geomText',this.value)" placeholder="C  0.0000  0.0000  0.0000&#10;C  1.4000  0.0000  0.0000&#10;...">${m.geomText||""}</textarea>
+          <div class="fieldgrid">
+            <label class="inline"><input type="checkbox" ${m.excludeH?'checked':''} onchange="updateMolField('${m.id}','excludeH',this.checked)"> Exclude hydrogens</label>
+            <div><input type="text" placeholder="Atom range e.g. 1-20,25 (blank = all)" value="${m.atomRange||''}" onchange="updateMolField('${m.id}','atomRange',this.value)"></div>
+          </div>
+        </div>
+        <div class="computed-line" id="comp-${m.id}"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ====================== CHARTS ======================
+let chartAtoms;
+function mkBarChart(ctx){
+  return new Chart(ctx, {
+    type:"bar",
+    data:{datasets:[]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      scales:{
+        x:{title:{display:true,text:"Atom index"}, grid:{display:false}},
+        y:{title:{display:true,text:"Signed distance from best-fit plane (\u00c5)"}, grid:{color:"rgba(150,150,150,.12)"}}
+      },
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+function compute(){
+  const results = molStore.map(m=>{
+    const dih = m.dihedrals && m.dihedrals.length ? dihedralMetrics(m.dihedrals) : null;
+    const n = dih ? dih.length : 0;
+    const pLinearAvg = dih && n ? dih.reduce((s,d)=>s+d.pLinear,0)/n : null;
+    const pCosAvg = dih && n ? dih.reduce((s,d)=>s+d.pCos,0)/n : null;
+    const Pi = dih && n ? piDA(dih) : null;
+    const Cavg = Pi!==null ? cAvgFromPi(Pi, n) : null;
+    const beta = Cavg!==null ? betaEff(Cavg) : null;
+    const weakest = dih && n ? dih.reduce((w,d)=> d.cos2<w.cos2?d:w, dih[0]) : null;
+
+    let geomResult = null, atomsUsed = [];
+    if(m.geomText){
+      const atoms = parseGeometryText(m.geomText);
+      atomsUsed = applyAtomFilter(atoms, m.excludeH, m.atomRange);
+      if(atomsUsed.length>=3) geomResult = planarityMetricsXYZ(atomsUsed);
+    }
+    return {m, dih, n, pLinearAvg, pCosAvg, Pi, Cavg, beta, weakest, geomResult, atomsUsed};
+  });
+
+  results.forEach(({m,dih,n,pLinearAvg,pCosAvg,Pi,Cavg,beta,weakest,geomResult,atomsUsed})=>{
+    const el = document.getElementById("comp-"+m.id);
+    if(!el) return;
+    let parts = [];
+    if(dih && n) parts.push(`Coplanarity: &Pi;<sub>DA</sub>=<b>${Pi.toFixed(4)}</b> &nbsp;C<sub>avg</sub>=<b>${Cavg.toFixed(4)}</b> &nbsp;&beta;<sub>eff</sub>=<b>${beta.toFixed(4)}</b> &nbsp;(ref: p<sub>cos</sub>=${pCosAvg.toFixed(3)}, p<sub>linear</sub>=${pLinearAvg.toFixed(3)}; weakest: "${weakest.label}" &phi;=${weakest.phi.toFixed(1)}&deg;) &mdash; ${n} junction(s)`);
+    if(geomResult) parts.push(`Planarity (Mode C): MPP=<b>${geomResult.mpp.toFixed(4)}</b> \u00c5, SDP=<b>${geomResult.sdp.toFixed(4)}</b> \u00c5 (${atomsUsed.length} atoms)`);
+    el.innerHTML = parts.join("<br>") || "Add dihedral junctions and/or paste atomic coordinates above to compute.";
+  });
+
+  document.getElementById("metrics").innerHTML = results.map(({m,n,pLinearAvg,pCosAvg,Pi,Cavg,beta,weakest,geomResult,atomsUsed})=>{
+    let rows = "";
+    if(Pi!==null){
+      rows += `<div>&Pi;<sub>DA</sub> (coupling retained) ${planarityTag(Pi,0.81,0.25,true)}<b>${Pi.toFixed(4)}</b></div>
+               <div>C<sub>avg</sub> (per-junction)<b>${Cavg.toFixed(4)}</b></div>
+               <div>&beta;<sub>eff</sub> (nats/junction)<b>${beta.toFixed(4)}</b></div>
+               <div>n junctions<b>${n}</b></div>
+               <div style="grid-column:1/-1;font-size:10px;color:var(--text3)">ref: p<sub>cos</sub>=${pCosAvg.toFixed(3)}, p<sub>linear</sub>=${pLinearAvg.toFixed(3)} &middot; weakest: ${weakest.label}</div>`;
+    }
+    if(geomResult){
+      rows += `<div>MPP (\u00c5) ${planarityTag(geomResult.mpp,0.05,0.15,false)}<b>${geomResult.mpp.toFixed(4)}</b></div>
+               <div>SDP (\u00c5)<b>${geomResult.sdp.toFixed(4)}</b></div>`;
+    }
+    if(!rows) rows = `<div class="note">No data yet</div>`;
+    return `<div class="mcard">
+      <div class="dyehead"><span class="dot" style="background:${m.color}"></span>${m.name}</div>
+      <div class="stats">${rows}</div>
+    </div>`;
+  }).join("") || `<div class="note">No molecules loaded \u2014 click a preset or add a custom molecule.</div>`;
+
+  // Atom deviation chart: dropdown-less, show first molecule with geometry data (or all stacked if few)
+  const withGeom = results.filter(r=>r.geomResult);
+  if(withGeom.length){
+    chartAtoms.data.datasets = withGeom.map(({m,geomResult})=>({
+      label:m.name,
+      data: geomResult.ds.map((d,i)=>({x:i+1,y:d})),
+      backgroundColor: m.color
+    }));
+  } else {
+    chartAtoms.data.datasets = [];
+  }
+  chartAtoms.update();
+
+  // Per-dihedral table
+  let dihRows = "";
+  results.forEach(({m,dih})=>{
+    if(!dih || !dih.length) return;
+    dih.forEach(d=>{
+      dihRows += `<tr><td>${m.name}</td><td>${d.label}</td><td>${d.phi.toFixed(2)}</td><td>${d.cos2.toFixed(4)}</td><td>${d.delta.toFixed(2)}</td><td>${d.pLinear.toFixed(3)}</td></tr>`;
+    });
+  });
+  document.getElementById("dihedralTable").innerHTML =
+    `<thead><tr><th>Molecule</th><th>Junction</th><th>&phi; (deg)</th><th>cos&sup2;&phi;</th><th>&delta; (deg)</th><th>p_linear (ref)</th></tr></thead><tbody>${dihRows || '<tr><td colspan="6" style="text-align:center;color:var(--text3)">No dihedral junctions entered yet</td></tr>'}</tbody>`;
+
+  // Comparison table
+  let compRows = "";
+  results.forEach(({m,n,Pi,Cavg,beta,pCosAvg,pLinearAvg,geomResult,atomsUsed})=>{
+    compRows += `<tr><td>${m.name}</td>
+      <td>${Pi!==null?Pi.toFixed(4):"\u2013"}</td>
+      <td>${Cavg!==null?Cavg.toFixed(4):"\u2013"}</td>
+      <td>${beta!==null?beta.toFixed(4):"\u2013"}</td>
+      <td>${n||"\u2013"}</td>
+      <td>${geomResult?geomResult.mpp.toFixed(4):"\u2013"}</td>
+      <td>${geomResult?geomResult.sdp.toFixed(4):"\u2013"}</td></tr>`;
+  });
+  document.getElementById("compareTable").innerHTML =
+    `<thead><tr><th>Molecule</th><th>&Pi;<sub>DA</sub></th><th>C<sub>avg</sub></th><th>&beta;<sub>eff</sub></th><th>n</th><th>MPP (\u00c5)</th><th>SDP (\u00c5)</th></tr></thead><tbody>${compRows || '<tr><td colspan="7" style="text-align:center;color:var(--text3)">No molecules yet</td></tr>'}</tbody>`;
+}
+
+// ====================== INIT ======================
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.querySelectorAll(".tabpane").forEach(p=>p.style.display="none");
+    document.getElementById("tab-"+t.dataset.tab).style.display="block";
+  });
+});
+
+chartAtoms = mkBarChart(document.getElementById("chartAtoms"));
+
+loadPreset("N719");
+addBlankMol();
+
+</script>
+</body>
+</html>
